@@ -127,22 +127,33 @@ func (p *builtinProvider) Delete(urn resource.URN, id resource.ID,
 }
 
 func (p *builtinProvider) Read(urn resource.URN, id resource.ID,
-	state resource.PropertyMap) (resource.PropertyMap, resource.Status, error) {
+	inputs, state resource.PropertyMap) (plugin.ReadResult, resource.Status, error) {
 
 	contract.Assert(urn.Type() == stackReferenceType)
 
-	state, err := p.readStackReference(state)
+	outputs, err := p.readStackReference(state)
 	if err != nil {
-		return nil, resource.StatusUnknown, err
+		return plugin.ReadResult{}, resource.StatusUnknown, err
 	}
 
-	return state, resource.StatusOK, nil
+	return plugin.ReadResult{
+		Inputs:  inputs,
+		Outputs: outputs,
+	}, resource.StatusOK, nil
 }
 
 func (p *builtinProvider) Invoke(tok tokens.ModuleMember,
 	args resource.PropertyMap) (resource.PropertyMap, []plugin.CheckFailure, error) {
+	if tok != "pulumi:pulumi:readStackResourceOutputs" {
+		return nil, nil, errors.Errorf("unrecognized function name: '%v'", tok)
+	}
 
-	return nil, nil, errors.Errorf("unrecognized function name: '%v'", tok)
+	outs, err := p.readStackResourceOutputs(args)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	return outs, nil, nil
 }
 
 func (p *builtinProvider) GetPluginInfo() (workspace.PluginInfo, error) {
@@ -165,6 +176,32 @@ func (p *builtinProvider) readStackReference(inputs resource.PropertyMap) (resou
 	}
 
 	outputs, err := p.backendClient.GetStackOutputs(p.context, name.StringValue())
+	if err != nil {
+		return nil, err
+	}
+
+	return resource.PropertyMap{
+		"name":    name,
+		"outputs": resource.NewObjectProperty(outputs),
+	}, nil
+}
+
+func (p *builtinProvider) readStackResourceOutputs(inputs resource.PropertyMap) (resource.PropertyMap, error) {
+	name, ok := inputs["stackName"]
+	contract.Assert(ok)
+	contract.Assert(name.IsString())
+
+	var typ string
+	if t, hasType := inputs["type"]; hasType {
+		contract.Assert(t.IsString())
+		typ = t.StringValue()
+	}
+
+	if p.backendClient == nil {
+		return nil, errors.New("no backend client is available")
+	}
+
+	outputs, err := p.backendClient.GetStackResourceOutputs(p.context, name.StringValue(), typ)
 	if err != nil {
 		return nil, err
 	}

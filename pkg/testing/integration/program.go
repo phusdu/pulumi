@@ -1269,7 +1269,7 @@ func (pt *programTester) prepareNodeJSProject(projinfo *engine.Projinfo) error {
 	}
 
 	// Now ensure dependencies are present.
-	if err = pt.runYarnCommand("yarn-install", []string{"install"}, cwd); err != nil {
+	if err = pt.runYarnCommand("yarn-install", []string{"install", "--ignore-engines"}, cwd); err != nil {
 		return err
 	}
 

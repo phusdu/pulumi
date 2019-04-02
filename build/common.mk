@@ -146,7 +146,7 @@ all:: build install lint test_all
 ensure::
 	$(call STEP_MESSAGE)
 	@if [ -e 'Gopkg.toml' ]; then echo "dep ensure -v"; dep ensure -v; fi
-	@if [ -e 'package.json' ]; then echo "yarn install"; yarn install; fi
+	@if [ -e 'package.json' ]; then echo "yarn install --ignore-engines"; yarn install --ignore-engines; fi
 
 build::
 	$(call STEP_MESSAGE)
@@ -176,7 +176,7 @@ install::
 	cp yarn.lock "$(PULUMI_NODE_MODULES)/$(NODE_MODULE_NAME)"
 	rm -rf "$(PULUMI_NODE_MODULES)/$(NODE_MODULE_NAME)/node_modules"
 	cd "$(PULUMI_NODE_MODULES)/$(NODE_MODULE_NAME)" && \
-	yarn install --prefer-offline --production && \
+	yarn install --prefer-offline --production --ignore-engines && \
 	(yarn unlink > /dev/null 2>&1 || true) && \
 	yarn link
 endif

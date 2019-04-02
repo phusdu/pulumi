@@ -4,6 +4,8 @@ matrix:
   include:
     - os: linux
       env: NODE_VERSION=v8.11.1 TRAVIS_PUBLISH_PACKAGES=true
+    - os: linux
+      env: NVM_NODEJS_ORG_MIRROR=https://nodejs.org/download/nightly NODE_VERSION=v12
     - if: type IN (cron, push)
       os: osx
       env: NODE_VERSION=v6.10.3

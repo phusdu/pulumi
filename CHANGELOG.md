@@ -2,6 +2,8 @@
 
 ### Improvements
 
+- Add ability to enumerate resource outputs from state snapshot of arbitrary stacks.
+
 ## 0.17.0 (Released March 5, 2019)
 
 This update includes several changes to core `@pulumi/pulumi` constructs that will not play nicely
